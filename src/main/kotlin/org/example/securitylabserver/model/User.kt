@@ -20,7 +20,7 @@ data class User(
     val salt: String,
 
     @Column(nullable = false)
-    val role: String
+    var role: String
 
 )
 

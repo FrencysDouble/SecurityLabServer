@@ -1,8 +1,10 @@
 package org.example.securitylabserver.services
 
 import org.bouncycastle.util.encoders.Hex
+import org.example.securitylabserver.model.RoleEnum
 import org.example.securitylabserver.model.User
 import org.example.securitylabserver.repositories.UserRepository
+import org.springframework.data.crossstore.ChangeSetPersister
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
 
@@ -41,13 +43,17 @@ class UserService(private val userRepository: UserRepository) {
         if (user != null) {
             userRepository.delete(user)
         } else {
-            throw UsernameNotFoundException
+            throw ChangeSetPersister.NotFoundException()
         }
     }
 
-    fun changeUserRole()
-    {
-
+    fun changeUserRole(id: Long, role: RoleEnum) {
+        val user = userRepository.findById(id).orElse(null)
+        if (user != null) {
+            user.role = role.name
+            userRepository.save(user)
+        } else {
+            throw ChangeSetPersister.NotFoundException()
+        }
     }
-
 }

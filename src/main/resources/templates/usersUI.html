@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Управление Пользователями</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+  </style>
+</head>
+<body>
+<h1>Список Пользователей</h1>
+<table id="userTable">
+  <thead>
+  <tr>
+    <th>ID</th>
+    <th>Имя Пользователя</th>
+    <th>Роль</th>
+    <th>Действия</th>
+  </tr>
+  </thead>
+  <tbody id="userList">
+  <!-- Пользователи будут добавлены сюда с помощью JavaScript -->
+  </tbody>
+</table>
+
+<script>
+  let stompClient = null;
+
+  function setConnected(connected) {
+    document.getElementById('userTable').style.visibility = connected ? 'visible' : 'hidden';
+    document.getElementById('userList').innerHTML = '';
+  }
+
+  function connect() {
+    const socket = new SockJS('/ws');
+    stompClient = Stomp.over(socket);
+    stompClient.connect({}, function (frame) {
+      setConnected(true);
+      console.log('Подключено: ' + frame);
+      stompClient.subscribe('/topic/users', function (users) {
+        updateUsers(JSON.parse(users.body));
+      });
+    });
+  }
+
+  function updateUsers(users) {
+    const userList = document.getElementById('userList');
+    userList.innerHTML = '';
+    users.forEach(user => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.username}</td>
+                    <td>
+                        <select onchange="changeRole(${user.id}, this.value)">
+                            <option value="USER" ${user.role === 'USER' ? 'selected' : ''}>Пользователь</option>
+                            <option value="ADMIN" ${user.role === 'ADMIN' ? 'selected' : ''}>Администратор</option>
+                            <option value="MODERATOR" ${user.role === 'MODERATOR' ? 'selected' : ''}>Модератор</option>
+                        </select>
+                    </td>
+                    <td>
+                        <button onclick="deleteUser(${user.id})">Удалить</button>
+                    </td>
+                `;
+      userList.appendChild(row);
+    });
+  }
+
+  function deleteUser(userId) {
+    fetch(`/api/v1/users/delete/${userId}`, { method: 'GET' })
+            .then(response => {
+              if (response.ok) {
+                console.log(`Пользователь с ID ${userId} успешно удалён.`);
+              } else {
+                console.error('Ошибка при удалении пользователя');
+              }
+            });
+  }
+
+  function changeRole(userId, role) {
+    const roleId = { 'USER': 1, 'ADMIN': 2, 'MODERATOR': 3 }[role];
+    fetch(`/api/v1/users/role/${userId}?roleId=${roleId}`, { method: 'POST' })
+            .then(response => {
+              if (response.ok) {
+                console.log(`Роль пользователя с ID ${userId} изменена на ${role}.`);
+              } else {
+                console.error('Ошибка при изменении роли пользователя');
+              }
+            });
+  }
+
+  connect(); // Подключение при загрузке страницы
+</script>
+</body>
+</html>
