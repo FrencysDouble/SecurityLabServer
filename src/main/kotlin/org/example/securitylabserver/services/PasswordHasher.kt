@@ -2,6 +2,7 @@ package org.example.securitylabserver.services
 
 import org.bouncycastle.jcajce.provider.digest.GOST3411
 import org.bouncycastle.util.encoders.Hex
+import org.example.securitylabserver.services.algorithms.GrasshooperCipher
 import java.security.SecureRandom
 
 class PasswordHasher {
@@ -24,5 +25,15 @@ class PasswordHasher {
     fun verifyPassword(password: String, salt: ByteArray, storedHash: String): Boolean {
         val hash = hashPassword(password, salt)
         return hash == storedHash
+    }
+
+    fun encryptGrasshopper(data: String): String {
+        val grasshopperCipher = GrasshooperCipher()
+        return grasshopperCipher.encrypt(data)
+    }
+
+    fun decryptGrasshopper(encryptedData: String): String {
+        val grasshopperCipher = GrasshooperCipher()
+        return grasshopperCipher.decrypt(encryptedData)
     }
 }

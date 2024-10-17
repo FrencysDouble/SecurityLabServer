@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service
 class UserService(private val userRepository: UserRepository) {
     private val passwordHasher = PasswordHasher()
 
-    //Post requests
+    //POST requests
 
     fun createUser(username: String, password: String, role: String): User {
         val salt = passwordHasher.generateSalt()

@@ -10,6 +10,6 @@ import org.springframework.web.bind.annotation.RestController
 class WebUITestController {
     @GetMapping("/main")
     fun showUsersPage(): String {
-        return "usersUI" // Это имя HTML-шаблона, который будет отображаться
+        return "usersUI"
     }
 }
